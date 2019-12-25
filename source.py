@@ -54,7 +54,7 @@ class PersiptronNetwork:
             sum = 0
             for i in range(n):
                 sum += sumofsq(self.teach(masIn[i], masOut[i]))
-            if sum < 0.3:
+            if sum < 0.1:
                 break
             print(sum)
 
@@ -118,6 +118,17 @@ class PersiptronNetwork:
 
         for i in range(self.numClass):
             self.T[i] = random.uniform(-1, 1)
+    def saveWeights(self,path = "weigths"):
+        np.save(path + "S.npy",self.S)
+        np.save(path + "E.npy",self.E)
+        np.save(path + "Q.npy",self.Q)
+        np.save(path + "T.npy",self.T)
+    def loadWeights(self,path = "weigths"):
+        self.S = np.load(path + "S.npy")
+        self.E = np.load(path + "E.npy")
+        self.Q = np.load(path + "Q.npy")
+        self.T = np.load(path + "T.npy")
+
 
 
 #  open file and make mode '1'
@@ -157,13 +168,19 @@ def pushNoise(shape, noise):
     return shape
 
 
-if __name__ == '__main__':
+
+def main(mode = True):
     listimage = openfile()
     shapes = binimage(listimage)
-    persiptron = PersiptronNetwork(SHAPE_SIDE, 8)
+    persiptron = PersiptronNetwork(SHAPE_SIDE, 16)
     persiptron.startInit()
+    
     masOut = np.array([np.array([1 if i == j else 0 for j in range(len(listimage))]) for i in range(len(listimage))])
-    persiptron.training(shapes, masOut)
+    if mode == True:
+        persiptron.training(shapes, masOut)
+        persiptron.saveWeights()
+    else:
+        persiptron.loadWeights()
     noise = 5
     picture = 1
     result = {a: 0 for a in range(noise, 100, noise)}
@@ -175,8 +192,11 @@ if __name__ == '__main__':
             if picture == answer.argmax() + 1:
                 result[noise] += 100 / len(listimage)
             picture += 1
-        noise += noise
+        noise += 5
         picture = 1
     print(result)
     pyplot.plot(list(result.keys()), list(result.values()))
     pyplot.show()
+
+if __name__ == '__main__':
+    main(False)
